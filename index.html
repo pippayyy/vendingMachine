@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vending Machine</title>
+    <meta charset="UTF-8" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Bootstrap icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+
+    <!-- Customer CSS for styling -->
+    <style type="text/css">
+        /* Used to format money input buttons to be circular */
+        .btn-circle {
+            width: 30px;
+            height: 30px;
+            padding: 6px 0px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.42857;
+        }
+        /* Used to format selection buttons to the appropriate width */
+        .classOptionSelect{
+            width: 46px !important;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <!-- Modal - welcome screen and user preferences e.g. currency -->
+    <div class="modal fade" id="modalPopUp" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalPopUpTitle" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+            <h5 class="modal-title w-100" id="modalPopUpTitle">Welcome to Pip's Vending Machine!</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row my-2 justify-content-center">
+                    <div class="col-11">
+                        <!-- Dropdown of available currencies -->
+                        <label for="currencyInput" class="form-label">Please select a currency</label>
+                        <select id="currencyInput" class="form-select" aria-label="Select currency">
+                            <option value="GBP">GBP (£)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="USD">USD ($)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+            <!-- Button to save preferences and close modal - pushing this button triggers JavaScript script to run -->
+            <button id="savePref" type="button" class="btn btn-primary">Save Preferences</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Main container for application -->
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col-1">
+            </div>
+            <!-- Application title and introduction message -->
+            <div class="col-10 text-center">
+                <h1>
+                    Pip's Vending Machine 
+                    <i class="bi bi-shop"></i>
+                </h1>
+                <h6 class="mt-0 fw-lighter">
+                    Please enjoy the range of products stocked below!
+                </h6>
+            </div>
+            <div class="col-1">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <!-- Left section of screen -->
+            <div class="col-sm-12 col-lg-8">
+                <!-- Table - to be populated with items passed into vending machine -->
+                <table id="machineTable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 5%"></th>
+                            <th scope="col" style="width: 16%">A</th>
+                            <th scope="col" style="width: 16%">B</th>
+                            <th scope="col" style="width: 16%">C</th>
+                            <th scope="col" style="width: 16%">D</th>
+                            <th scope="col" style="width: 16%">E</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">1</th>
+                            <td id="A1" data-name=""></td>
+                            <td id="B1" data-name=""></td>
+                            <td id="C1" data-name=""></td>
+                            <td id="D1" data-name=""></td>
+                            <td id="E1" data-name=""></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">2</th>
+                            <td id="A2" data-name=""></td>
+                            <td id="B2" data-name=""></td>
+                            <td id="C2" data-name=""></td>
+                            <td id="D2" data-name=""></td>
+                            <td id="E2" data-name=""></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">3</th>
+                            <td id="A3" data-name=""></td>
+                            <td id="B3" data-name=""></td>
+                            <td id="C3" data-name=""></td>
+                            <td id="D3" data-name=""></td>
+                            <td id="E3" data-name=""></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- msg box to alert user of the transaction status-->
+                <div id="transactionMsg" class="alert alert-warning" role="alert">
+                    Transaction updates will appear here.
+                </div>
+                <!-- Section to show items bought by user -->
+                <hr>
+                <div class="row mt-3 mb-2">
+                    <div class="col-12">
+                        <h4>
+                            Items User Bought
+                            <i class="bi bi-cart-check"></i>
+                        </h4>
+                        <h6 class="mt-0 fw-lighter">
+                            This space shows the items the user has bought
+                        </h6>
+                    </div>
+                </div>
+                <!-- List group of items and quantity bought -->
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <ul id="elItemsBought" class="list-group">
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- Spacer -->
+            <div class="col-sm-12 col-lg-1">
+            </div>
+            <!-- Right section of screen - for user and operator interfaces -->
+            <div class="col-sm-12 col-lg-3">
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <h4>
+                            User Interface
+                            <i class="bi bi-person"></i>
+                        </h4>
+                    </div>
+                </div>
+                <div class="row mb-0">
+                    <div class="col-12">
+                        <!-- Display funds added to machine -->
+                        <h6>
+                            Funds available:
+                            <span class="currencySymbol">£</span>
+                            <span id="funds"></span>
+                        </h6>
+                        <h6 class="mt-0 fw-lighter">
+                            Add funds below:
+                        </h6>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <!-- User input - buttons to add funds to machine - 0.5, 1, 2 -->
+                        <button type="button" data-money="0.5" class="btn btn-primary btn-circle classAddFunds">0.5</button>
+                        <button type="button" data-money="1" class="btn btn-primary btn-circle classAddFunds">1</button>
+                        <button type="button" data-money="2" class="btn btn-primary btn-circle classAddFunds">2</button>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <!-- User input - button to withdraw funds from machine -->
+                        <button type="button" id="buttWithdrawFunds" class="btn btn-primary">Withdraw Funds</button>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6 class="mt-0 fw-lighter">
+                            Make item selection:
+                        </h6>
+                    </div>
+                </div>
+                <!-- User input- grid of buttons with product codes related to the vending machine -->
+                <div class="row mt-1">
+                    <div class="col-12">
+                        <button type="button" data-code="A1"
+                            class="btn btn-primary btn-block classOptionSelect">A1</button>
+                        <button type="button" data-code="B1"
+                            class="btn btn-primary btn-block classOptionSelect">B1</button>
+                        <button type="button" data-code="C1"
+                            class="btn btn-primary btn-block classOptionSelect">C1</button>
+                        <button type="button" data-code="D1"
+                            class="btn btn-primary btn-block classOptionSelect">D1</button>
+                        <button type="button" data-code="E1"
+                            class="btn btn-primary btn-block classOptionSelect">E1</button>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-12">
+                        <button type="button" data-code="A2"
+                            class="btn btn-primary btn-block classOptionSelect">A2</button>
+                        <button type="button" data-code="B2"
+                            class="btn btn-primary btn-block classOptionSelect">B2</button>
+                        <button type="button" data-code="C2"
+                            class="btn btn-primary btn-block classOptionSelect">C2</button>
+                        <button type="button" data-code="D2"
+                            class="btn btn-primary btn-block classOptionSelect">D2</button>
+                        <button type="button" data-code="E2"
+                            class="btn btn-primary btn-block classOptionSelect">E2</button>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-12">
+                        <button type="button" data-code="A3"
+                            class="btn btn-primary btn-block classOptionSelect">A3</button>
+                        <button type="button" data-code="B3"
+                            class="btn btn-primary btn-block classOptionSelect">B3</button>
+                        <button type="button" data-code="C3"
+                            class="btn btn-primary btn-block classOptionSelect">C3</button>
+                        <button type="button" data-code="D3"
+                            class="btn btn-primary btn-block classOptionSelect">D3</button>
+                        <button type="button" data-code="E3"
+                            class="btn btn-primary btn-block classOptionSelect">E3</button>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mt-3 mb-2">
+                    <div class="col-12">
+                        <h4>
+                            Operator Interface
+                            <i class="bi bi-wrench"></i>
+                        </h4>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <!-- Display profits currently in machine -->
+                        <h6>
+                            Funds received:
+                            <span class="currencySymbol">£</span>
+                            <span id="profit"></span>
+                        </h6>
+                    </div>
+                </div>
+                <!-- Operator - expiry date warning -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-warning" role="alert">
+                            <strong>Warning!</strong> Products near expiry:
+                            <ul class="mb-0" id="expireProducts">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Operator - remove/add stock -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="mt-0 fw-lighter">
+                            Remove/add stock:
+                        </h6>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <!-- Operator input - dropdown to select product from list -->
+                        <select id="productSelected" class="form-select" aria-label="Default select example">
+                            <option selected>Product...</option>
+                            <option value="Pepsi">Pepsi</option>
+                            <option value="Fanta">Fanta</option>
+                            <option value="Coke">Coke</option>
+                            <option value="Sprite">Sprite</option>
+                            <option value="J20">J20</option>
+                            <option value="Mars Bar">Mars Bar</option>
+                            <option value="Twix">Twix</option>
+                            <option value="Skittles">Skittles</option>
+                            <option value="Haribo">Haribo</option>
+                            <option value="Doritos">Doritos</option>
+                            <option value="Stamps">Stamps</option>
+                            <option value="Pens">Pens</option>
+                            <option value="Calculator">Calculator</option>
+                            <option value="Envelopes">Envelopes</option>
+                            <option value="Pencils">Pencils</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <!-- Operator input - button to remove stock from machine - one click reduces selected item's qty by one -->
+                        <button id="productRemove" type="button" class="btn btn-primary w-100">
+                            <i class="bi bi-dash-circle px-1"></i>
+                             Remove
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <!-- Operator input - button to add stock to machine - one click increases selected item's qty by one -->
+                        <button id="productAdd" type="button" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle px-1"></i>
+                             Add
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- end of container -->
+    </div>
+
+
+
+</body>
+
+<!-- Script cdn - bootstrap bundle min js -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+
+<!-- Script cdn - jquery -->
+<script src="https://code.jquery.com/jquery-3.6.3.min.js"
+    integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+
+
+<!-- classes -->
+<script>
+
+    //Machine class - used to interact with the user and populates the interface
+    class Machine {
+        //Declare variables
+        #money;
+        #items;
+        #itemsBought;
+        #UserComms;
+        #profit;
+        #currency;
+        conversionRates = {};
+
+        //Constructor - used to establish variables
+        constructor() {
+            this.#money = 0;
+            this.#items = [];
+            this.#itemsBought = {};
+            this.#UserComms = "";
+            this.#profit = 0;
+            this.#currency = "GBP";
+            this.conversionRates = {
+                            "GBP" :[1,"£"],
+                            "EUR": [1.13,"€"],
+                            "USD": [1.21,"$"]
+                        };
+        }
+
+        //Function to add stock to vending machine (construct table)
+        #buildTable() {
+            //Create empty variable to store HTML
+            var elementTabletHTML = "";
+            //Loop through each item in #items array
+            for (var item in this.#items) {
+
+                //Use item code to find table cell element
+                var itemCode = this.#items[item][0]['code'];
+                var tableCell = document.getElementById(itemCode);
+                var tableCellId = "#" + itemCode;
+
+                //Check if product contains allergens
+                var allergensFlag = "";
+                //Check if item has allergns marker in array (It could contain allergens e.g. food item)
+                if( 'allergens' in (this.#items[item][0])){
+                    //If has marker and the array is greater than zero (If more than one allergn in array)
+                    if(this.#items[item][0]['allergens'].length >0){
+                        //if product contains allergens, make warning label visible
+                        allergensFlag = '<button type="button" class="badge bg-warning text-dark visible" data-toggle="tooltip" data-placement="right" title="'+ (this.#items[item][0]['allergens']).toString() +'">Allergens</button>';
+                        //initialise tooltips using data-toggle attribute
+                        $(function () {
+                            $('[data-toggle="tooltip"]').tooltip();
+                        })
+                    } else{
+                        //if product does not contains allergens, make warning label invisible
+                        allergensFlag = '<button type="button" class="badge bg-warning text-dark invisible" data-toggle="tooltip" data-placement="right" title="">Allergens</button>';
+                    }
+                } else{
+                    //if product does not contains allergens, make warning label invisible
+                    allergensFlag = '<button type="button" class="badge bg-warning text-dark invisible" data-toggle="tooltip" data-placement="right" title="">Allergens</button>';
+                }
+                
+                //Lookup currency
+                var currencySymbol = this.conversionRates[this.#currency][1];
+
+                //Store product name in data-attribute of table cell - used for product selection
+                $(tableCellId).data("name", this.#items[item][0]['name']);
+
+                //Add product information to table cell - name, price, size, amount, allergens (if applicable)
+                tableCell.innerHTML = '<div class=" d-flex justify-content-between align-items-start">' +
+                    '<div class="ms-2 me-auto"> <div class=""><strong>' + this.#items[item][0]['name'] + '</strong><br>' +
+                    '<em>(' + this.#items[item][0]['size'] + ') </em></div>' +
+                    '<img src="'+ this.#items[item][0]['pic'] + '" alt="" width="50" height="60"> <br>' +
+                    '<span class="badge bg-info text-dark">' + currencySymbol + this.#items[item][0]['price'] + '</span> <br>' +
+                    allergensFlag + 
+                    '</div><span class="badge bg-primary rounded-pill">' + this.#items[item][0]['amount'] + '</span></div>';
+            }
+
+        }
+
+        //Function to add products to #items array
+        addStock(...args) {
+            //stock is added into machine #items attribute
+            args.forEach((arg) => {
+                this.#items[arg.name] = [arg];
+            });
+
+            //Invoke build table function once #items has been populated
+            this.#buildTable();
+            //Check expiry dates
+            this.#checkExpiry();
+        }
+
+        //Update products near expiry notification
+        #checkExpiry() {                
+            //Get current datetime
+            let threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() + 3);
+            //Get expiry list element
+            var expiryList = document.getElementById('expireProducts');
+            var expireHtml ="";
+            
+            //Loop through each item in #items array
+            for (var item in this.#items) {
+                //Check if item has expiry marker in array (It can expire e.g. food item)
+                if( 'expiry' in (this.#items[item][0])){
+                    //If has marker and the date is within 3 months
+                    if(this.#items[item][0]['expiry'] < threeMonthsAgo){
+                        console.log("yes expiry in next 3 months!")
+                        expireHtml += '<li>'+ this.#items[item][0]['name'] + ' - <em>' + (this.#items[item][0]['expiry']).toLocaleDateString() +'</em></li>'
+                    }
+                }
+            }
+            //Update expiry notification
+            expiryList.innerHTML = expireHtml;
+        }
+
+        //Function to update user interface with latest information
+        #updateInterface() {
+            //Update currency symbol in all instances required - for user and operator
+            document.querySelectorAll('.currencySymbol').forEach(currencyElement =>
+                {
+                    currencyElement.innerHTML = this.conversionRates[this.#currency][1];
+                }
+            )
+
+            //Update fund total on screen
+            var elFundTotal = document.getElementById('funds');
+            elFundTotal.innerHTML = this.#money;
+
+            //Update funds received - operator view
+            var elFundsReceived = document.getElementById('profit');
+            elFundsReceived.innerHTML = this.#profit;
+
+            //Update Items User Bought section
+            var elItemsBought = document.getElementById('elItemsBought');
+            var elementBoughtHTML = "";
+            for (var product in this.#itemsBought) {
+                var itemName = product;
+                var itemQuantity = this.#itemsBought[product];
+
+                elementBoughtHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+                    itemName + '<span class="badge bg-primary rounded-pill">' + itemQuantity + '</span></li>';
+            }
+
+            elItemsBought.innerHTML = elementBoughtHTML;
+
+            //Check expiry dates
+            this.#checkExpiry();
+
+            //re-build table
+            this.#buildTable();
+        }
+
+        //Function to convert currency
+        changeCurrency(currency) {
+            //Set currency attribute
+            this.#currency = currency;
+            //lookup currency conversion rate - static
+            var conversionRateFromGbp = this.conversionRates[currency][0];
+
+            //Convert price of all items
+            for (var item in this.#items) {
+                this.#items[item][0]['price'] = (this.#items[item][0]['price'] * conversionRateFromGbp).toFixed(2);
+            }
+
+            this.#updateInterface();
+        }
+
+        //Function to update transaction message on screen
+        #updateTransactionMsg(CommsToUser) {
+            var elMachineMsg = document.getElementById('transactionMsg');
+            elMachineMsg.className = '';
+            elMachineMsg.classList.add('alert');
+            //remove existing alert status from message
+            if (elMachineMsg.classList.contains('alert-danger')) {
+                elMachineMsg.classList.remove('alert-danger');
+            }
+            if (elMachineMsg.classList.contains('alert-success')) {
+                elMachineMsg.classList.remove('alert-success');
+            }
+            if (elMachineMsg.classList.contains('alert-info')) {
+                elMachineMsg.classList.remove('alert-info');
+            }
+            //Switch statement to determine message text and alert state
+            switch (CommsToUser) {
+                case "insufficentFunds":
+                    this.#UserComms = "Transaction failed - insufficient funds";
+                    elMachineMsg.classList.add('alert-danger');
+                    break;
+                case "insufficenStock":
+                    this.#UserComms = "Transaction failed - insufficient stock";
+                    elMachineMsg.classList.add('alert-danger');
+                    break;
+                case "stockUpdateFail":
+                    this.#UserComms = "Transaction failed - invalid stock quantity";
+                    elMachineMsg.classList.add('alert-danger');
+                    break;
+                case "stockUpdateSuccess":
+                    this.#UserComms = "Transaction successful - stock updated";
+                    elMachineMsg.classList.add('alert-success');
+                    break;
+                case "purchaseSuccess":
+                    this.#UserComms = "Transaction successful - remaining balance: " + this.conversionRates[this.#currency][1] + this.#money;;
+                    elMachineMsg.classList.add('alert-success');
+                    break;
+                case "fundsAdded":
+                    this.#UserComms = "Funds added successful - total balance: " + this.conversionRates[this.#currency][1] + this.#money;
+                    elMachineMsg.classList.add('alert-success');
+                    break;
+                case "fundsRemoved":
+                    this.#UserComms = "Funds have been successfully withdrawn  - thank you";
+                    elMachineMsg.classList.add('alert-success');
+                    break;
+                default:
+                    this.#UserComms = "Awaiting action";
+                    elMachineMsg.classList.add('alert-warning');
+            }
+
+            //update message div based on state of transaction
+            elMachineMsg.innerHTML = this.#UserComms;
+        }
+
+        //Function to update stock item amount - used when item purchased and when operator adds/removes stock
+        #setStockItemAmount(itemName, newValue) {
+            this.#items[itemName][0].amount = newValue;
+            this.#updateInterface();
+        }
+
+        //Function to withdraw funds when user pushes button
+        withdrawFunds() {
+            if(parseFloat(this.money) != 0){
+                    this.#money = 0;
+                    this.#updateTransactionMsg("fundsRemoved");
+                } else{
+                    this.#updateTransactionMsg("insufficentFunds");
+                }
+            this.#updateInterface();
+        }
+
+        //Function to set funds (#money attribute) - used to add and remove funds (when item purchased)
+        setFunds(operator, funds) {
+            if (operator == "+") {
+                var res = parseFloat(this.#money) + parseFloat(funds);
+                this.#money = parseFloat(res).toFixed(2);
+                this.#updateTransactionMsg("fundsAdded");
+
+            } else {
+                if(parseFloat(this.#money) != 0){
+                    var res = parseFloat(this.#money) - parseFloat(funds);
+                    this.#money = parseFloat(res).toFixed(2);
+                    var resProfit = parseFloat(this.#profit) + parseFloat(funds);
+                    this.#profit = parseFloat(resProfit).toFixed(2);
+                    this.#updateTransactionMsg("fundsRemoved");
+                } else{
+                    this.#updateTransactionMsg("insufficentFunds");
+                }
+
+            }
+            this.#updateInterface();
+        }
+
+        //Function to manage stock (operator)
+        manageStock(itemName, amountImpact) {
+            var newAmount = parseInt(this.#items[itemName][0].amount)  + amountImpact;
+            console.log("newAmount", newAmount);
+            //Check if stock exists - maximum qty of 20 per item
+            if (newAmount > -1 && newAmount < 21) {
+                this.#setStockItemAmount(itemName,newAmount)
+                this.#updateTransactionMsg("stockUpdateSuccess");
+            } else{
+                this.#updateTransactionMsg("stockUpdateFail");
+            }
+        }
+
+        //Function to purchase items
+        purchaseItem(itemName) {
+            console.log("this.items[itemName].price: ", this.#items[itemName][0].price);
+            var price = this.#items[itemName][0].price;
+            if (this.#items[itemName][0].amount > 0) {
+                if (price <= this.#money) {
+                    //check if item has been bought previously - if yes, add 1 to qty
+                    if (itemName in this.#itemsBought) {
+                        this.#itemsBought[itemName] += 1;
+                    } else {
+                        //add new items in itemsBought object and set qty to 1
+                        this.#itemsBought[itemName] = 1;
+                    }
+                    this.setFunds("-", price);
+                    this.#setStockItemAmount(itemName, this.#items[itemName][0].amount - 1);
+                    this.#updateTransactionMsg("purchaseSuccess");
+                } else {
+                    this.#updateTransactionMsg("insufficentFunds");
+                }
+            } else {
+                this.#updateTransactionMsg("insufficenStock");
+            }
+
+            this.#updateInterface();
+
+        }
+
+    }
+
+    //Item class for operator to add stock to machine - base class
+    class Item {
+        constructor(name, amount, pic, price, code, size) {
+            this.name = name;
+            this.amount = amount;
+            this.pic = pic;
+            this.price = price;
+            this.code = code;
+            this.size = size;
+        }
+
+        getAmount() {
+            return this.amount;
+        }
+
+        setAmount(amount) {
+            this.amount = amount;
+        }
+
+        getPrice() {
+            return this.price;
+        }
+
+        setPrice(price) {
+            this.price = price;
+        }
+
+        getSize() {
+            return this.size;
+        }
+
+        setSize(size) {
+            this.size = size;
+        }
+    }
+    
+
+    //Stationary class - extends Item class
+    class Stationary extends Item {
+        constructor(name, amount, pic, price, code, size) {
+            super(name, amount, pic, price, code, size);
+            this.size = size + " pack"
+        }
+
+        setSize(size) {
+            this.size = size + " pack";
+        }
+    }
+
+    //Food class - extends Item class
+    class Food extends Item {
+        constructor(name, amount, pic, price, code, size, expiry, allergens) {
+            super(name, amount, pic, price, code, size);
+            this.size = size + "g";
+            this.expiry = expiry;
+            this.allergens = allergens;
+        }
+
+        getExpiry() {
+            return this.expiry;
+        }
+
+        setExpiry(expiry) {
+            this.expiry = expiry;
+        }
+
+        getAllergens() {
+            return this.allegens;
+        }
+
+        setAllergens(allergens) {
+            this.allergens = allergens;
+        }
+    }
+
+    //Drinks class - extends Food class
+    class Drink extends Food {
+        constructor(name, amount, pic, price, code, size, expiry, allergens, fizzy) {
+            super(name, amount, pic, price, code, size, expiry, allergens);
+            this.size = size + "ml";
+            this.fizzy = fizzy;
+        }
+
+        setSize(size) {
+            this.size = size + "ml";
+        }
+
+        getFizzy() {
+            return this.fizzy;
+        }
+
+        setFizzy(fizzy) {
+            this.fizzy = fizzy;
+        }
+    }
+    
+</script>
+
+
+<!-- On page load - start application -->
+<script>
+    $(document).ready(function () {
+        //Show welcome modal
+        $("#modalPopUp").modal('show');
+
+        //Create new instance of the Machine class
+        const machine = new Machine();
+        //Create instances of class Drinks
+        const pepsi = new Drink('Pepsi', '5', 'Images/pepsi.png', '1.50', 'A1','360', new Date(2025,02,01), [], true);
+        const fanta = new Drink('Fanta', '5', 'Images/fanta.jpeg', '0.55', 'B1','150',new Date(2025,02,01),[], true);
+        const coke = new Drink('Coke', '5', 'Images/coke.png', '1.00', 'C1','330',new Date(2025,02,01),[], true);
+        const sprite = new Drink('Sprite', '5', 'Images/sprite.png', '0.75', 'D1','250',new Date(2025,02,01),[], true);
+        const j20 = new Drink('J20', '5', 'Images/j20.png', '1.30', 'E1','250',new Date(2025,02,01),[], false);
+        //Create instances of class Food
+        const mars = new Food('Mars Bar', '10', 'Images/mars.png', '0.75', 'A2','51', new Date(2023,04,07), ['Eggs', 'Barley', 'Milk', 'Soya']);
+        const twix = new Food('Twix', '10', 'Images/twix.png', '0.60', 'B2','180', new Date(2024,02,01), ['Milk', 'Soya', 'Wheat']);
+        const skittles = new Food('Skittles', '15', 'Images/skittles.png', '0.65', 'C2','45', new Date(2023,12,01), []);
+        const haribo = new Food('Haribo', '15', 'Images/haribo.png', '1.00', 'D2','175',new Date(2024,07,03), []);
+        const dorito = new Food('Doritos', '8', 'Images/dorito.png', '0.95', 'E2','55', new Date(2023,05,06), ['Milk','Wheat']);
+        //Create instances of class Stationary
+        const stamp = new Stationary('Stamps', '5', 'Images/stamps.png', '5.50', 'A3','8');
+        const pen = new Stationary('Pens', '8', 'Images/pens.png', '4.00', 'B3','10');
+        const calculator = new Stationary('Calculator', '3', 'Images/calculator.png', '10.00', 'C3','1');
+        const envelopes = new Stationary('Envelopes', '5', 'Images/envelope.png', '2.00', 'D3','50');
+        const pencil = new Stationary('Pencils', '3', 'Images/pencils.png', '5.00', 'E3','3');
+
+        //Invoke public method 'addStock' - passing in item instances (objects)
+        machine.addStock(pepsi, coke, sprite, fanta, j20, mars, twix, skittles, haribo, dorito, stamp, pen, calculator, envelopes, pencil);
+
+        //Get modal save button by ID
+        var savePrefButton = document.getElementById('savePref');
+        //When modal button clicked
+        savePrefButton.addEventListener('click', function(event){
+            //Get selected currency input
+            var currency = document.getElementById('currencyInput').value;
+
+            //Perform currency conversion
+            machine.changeCurrency(currency);
+
+            //Close modal
+            $("#modalPopUp").modal('hide');
+            
+        })
+
+        //Script to listen for user input - add funds
+        $(document).on('click', '.classAddFunds', function (event) {
+            const moneyAmount = $(this).data('money');
+            console.log("buttAddFunds clicked: ", moneyAmount);
+            machine.setFunds("+", moneyAmount);
+
+        });
+        //Script to listen for user input - option selection
+        $(document).on('click', '.classOptionSelect', function (event) {
+            const itemCode = $(this).data('code');
+            var itemId = "#" + itemCode;
+            var itemName = $(itemId).data('name');
+            console.log("buttOptionSelection item name: ", itemName);
+            machine.purchaseItem(itemName);
+        });
+
+        //Script to listen for user input - withdraw funds
+        $(document).on('click', '#buttWithdrawFunds', function (event) {
+            machine.withdrawFunds();
+        });
+
+        //Script to listen for operator input - add stock
+        $(document).on('click', '#productAdd', function (event) {
+            var selectedProduct = document.getElementById('productSelected').value;
+            machine.manageStock(selectedProduct, +1);
+        });
+
+        //Script to listen for operator input - remove stock
+        $(document).on('click', '#productRemove', function (event) {
+            var selectedProduct = document.getElementById('productSelected').value;
+            machine.manageStock(selectedProduct, -1);
+        });
+
+        
+
+    })
+
+
+</script>
+
+</html>
