@@ -26,11 +26,6 @@
             font-size: 12px;
             line-height: 1.42857;
         }
-        /* Used to format selection buttons to the appropriate width */
-        .classOptionSelect{
-            /*width: 46px !important;*/
-        }
-
     </style>
 </head>
 
@@ -401,7 +396,7 @@
 
     //Machine class - used to interact with the user and populates the interface
     class Machine {
-        //Declare variables
+        //Declare attributes
         #money;
         #items;
         #itemsBought;
@@ -410,7 +405,7 @@
         #currency;
         conversionRates = {};
 
-        //Constructor - used to establish variables
+        //Constructor - used to establish attributes
         constructor() {
             this.#money = 0;
             this.#items = [];
@@ -425,7 +420,7 @@
                         };
         }
 
-        //Function to add stock to vending machine (construct table)
+        //Private function to add stock to vending machine (construct table)
         #buildTable() {
             //Create empty variable to store HTML
             var elementTabletHTML = "";
@@ -489,23 +484,22 @@
             this.#checkExpiry();
         }
 
-        //Update products near expiry notification
+        //Private function to update 'products near expiry' notification
         #checkExpiry() {                
             //Get current datetime
-            let threeMonthsAgo = new Date();
-            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() + 3);
+            let threeMonthsAhead = new Date();
+            threeMonthsAhead.setMonth(threeMonthsAhead.getMonth() + 3);
             //Get expiry list element
             var expiryList = document.getElementById('expireProducts');
             var expireHtml ="";
             
             //Loop through each item in #items array
             for (var item in this.#items) {
-                //Check if item has expiry marker in array (It can expire e.g. food item)
-                if( 'expiry' in (this.#items[item][0])){
+                //Check if item has expiry marker in array (It can expire e.g. food item) - checks for method because #expiry is a private attribute
+                if( 'getExpiry' in (this.#items[item][0])){
                     //If has marker and the date is within 3 months
-                    if(this.#items[item][0]['expiry'] < threeMonthsAgo){
-                        console.log("yes expiry in next 3 months!")
-                        expireHtml += '<li>'+ this.#items[item][0]['name'] + ' - <em>' + (this.#items[item][0]['expiry']).toLocaleDateString() +'</em></li>'
+                    if(this.#items[item][0].getExpiry() < threeMonthsAhead){
+                        expireHtml += '<li>'+ this.#items[item][0]['name'] + ' - <em>' + (this.#items[item][0].getExpiry()).toLocaleDateString() +'</em></li>'
                     }
                 }
             }
@@ -513,7 +507,7 @@
             expiryList.innerHTML = expireHtml;
         }
 
-        //Function to update user interface with latest information
+        //Private function to update user interface with latest information
         #updateInterface() {
             //Update currency symbol in all instances required - for user and operator
             document.querySelectorAll('.currencySymbol').forEach(currencyElement =>
@@ -533,6 +527,7 @@
             //Update Items User Bought section
             var elItemsBought = document.getElementById('elItemsBought');
             var elementBoughtHTML = "";
+            //Loop through all items in itemsBought
             for (var product in this.#itemsBought) {
                 var itemName = product;
                 var itemQuantity = this.#itemsBought[product];
@@ -541,12 +536,13 @@
                     itemName + '<span class="badge bg-primary rounded-pill">' + itemQuantity + '</span></li>';
             }
 
+            //Update HTML
             elItemsBought.innerHTML = elementBoughtHTML;
 
             //Check expiry dates
             this.#checkExpiry();
 
-            //re-build table
+            //Re-build table
             this.#buildTable();
         }
 
@@ -562,6 +558,7 @@
                 this.#items[item][0]['price'] = (this.#items[item][0]['price'] * conversionRateFromGbp).toFixed(2);
             }
 
+            //Update values on the screen for user
             this.#updateInterface();
         }
 
@@ -619,7 +616,7 @@
             elMachineMsg.innerHTML = this.#UserComms;
         }
 
-        //Function to update stock item amount - used when item purchased and when operator adds/removes stock
+        //Private function to update stock item amount - used when item purchased and when operator adds/removes stock
         #setStockItemAmount(itemName, newValue) {
             this.#items[itemName][0].amount = newValue;
             this.#updateInterface();
@@ -658,10 +655,9 @@
             this.#updateInterface();
         }
 
-        //Function to manage stock (operator)
+        //Function to manage stock (used by operator)
         manageStock(itemName, amountImpact) {
             var newAmount = parseInt(this.#items[itemName][0].amount)  + amountImpact;
-            console.log("newAmount", newAmount);
             //Check if stock exists - maximum qty of 20 per item
             if (newAmount > -1 && newAmount < 21) {
                 this.#setStockItemAmount(itemName,newAmount)
@@ -673,7 +669,6 @@
 
         //Function to purchase items
         purchaseItem(itemName) {
-            console.log("this.items[itemName].price: ", this.#items[itemName][0].price);
             var price = this.#items[itemName][0].price;
             if (this.#items[itemName][0].amount > 0) {
                 if (price <= this.#money) {
@@ -700,7 +695,7 @@
 
     }
 
-    //Item class for operator to add stock to machine - base class
+    //Item base class
     class Item {
         constructor(name, amount, pic, price, code, size) {
             this.name = name;
@@ -708,32 +703,13 @@
             this.pic = pic;
             this.price = price;
             this.code = code;
-            this.size = size;
-        }
-
-        getAmount() {
-            return this.amount;
-        }
-
-        setAmount(amount) {
-            this.amount = amount;
-        }
-
-        getPrice() {
-            return this.price;
-        }
-
-        setPrice(price) {
-            this.price = price;
-        }
-
-        getSize() {
-            return this.size;
+            this.setSize(size);
         }
 
         setSize(size) {
-            this.size = size;
+            this.size = size + " unit";
         }
+
     }
     
 
@@ -741,7 +717,7 @@
     class Stationary extends Item {
         constructor(name, amount, pic, price, code, size) {
             super(name, amount, pic, price, code, size);
-            this.size = size + " pack"
+            this.setSize(size);
         }
 
         setSize(size) {
@@ -751,48 +727,39 @@
 
     //Food class - extends Item class
     class Food extends Item {
+        //Declare private attributes
+        #expiry;
+
         constructor(name, amount, pic, price, code, size, expiry, allergens) {
             super(name, amount, pic, price, code, size);
-            this.size = size + "g";
-            this.expiry = expiry;
+            this.setSize(size);
+            this.#expiry = expiry;
             this.allergens = allergens;
+        }
+
+        setSize(size) {
+            this.size = size + "g";
         }
 
         getExpiry() {
-            return this.expiry;
+            return this.#expiry;
         }
 
         setExpiry(expiry) {
-            this.expiry = expiry;
-        }
-
-        getAllergens() {
-            return this.allegens;
-        }
-
-        setAllergens(allergens) {
-            this.allergens = allergens;
+            this.#expiry = expiry;
         }
     }
 
-    //Drinks class - extends Food class
+    //Drink class - extends Food class
     class Drink extends Food {
         constructor(name, amount, pic, price, code, size, expiry, allergens, fizzy) {
             super(name, amount, pic, price, code, size, expiry, allergens);
-            this.size = size + "ml";
+            this.setSize(size);
             this.fizzy = fizzy;
         }
 
         setSize(size) {
             this.size = size + "ml";
-        }
-
-        getFizzy() {
-            return this.fizzy;
-        }
-
-        setFizzy(fizzy) {
-            this.fizzy = fizzy;
         }
     }
     
@@ -807,12 +774,14 @@
 
         //Create new instance of the Machine class
         const machine = new Machine();
-        //Create instances of class Drinks
+
+        //Create items using classes to load into machine
+        //Create instances of class Drink
         const pepsi = new Drink('Pepsi', '5', 'Images/pepsi.png', '1.50', 'A1','360', new Date(2025,02,01), [], true);
         const fanta = new Drink('Fanta', '5', 'Images/fanta.jpeg', '0.55', 'B1','150',new Date(2025,02,01),[], true);
         const coke = new Drink('Coke', '5', 'Images/coke.png', '1.00', 'C1','330',new Date(2025,02,01),[], true);
         const sprite = new Drink('Sprite', '5', 'Images/sprite.png', '0.75', 'D1','250',new Date(2025,02,01),[], true);
-        const j20 = new Drink('J20', '5', 'Images/j20.png', '1.30', 'E1','250',new Date(2025,02,01),[], false);
+        const j20 = new Drink('J20', '5', 'Images/j20.png', '1.30', 'E1','250',new Date(2023,04,01),[], false);
         //Create instances of class Food
         const mars = new Food('Mars Bar', '10', 'Images/mars.png', '0.75', 'A2','51', new Date(2023,04,07), ['Eggs', 'Barley', 'Milk', 'Soya']);
         const twix = new Food('Twix', '10', 'Images/twix.png', '0.60', 'B2','180', new Date(2024,02,01), ['Milk', 'Soya', 'Wheat']);
@@ -829,6 +798,7 @@
         //Invoke public method 'addStock' - passing in item instances (objects)
         machine.addStock(pepsi, coke, sprite, fanta, j20, mars, twix, skittles, haribo, dorito, stamp, pen, calculator, envelopes, pencil);
 
+        //Currency selection action
         //Get modal save button by ID
         var savePrefButton = document.getElementById('savePref');
         //When modal button clicked
@@ -846,41 +816,45 @@
 
         //Script to listen for user input - add funds
         $(document).on('click', '.classAddFunds', function (event) {
+            //Get the 'money' data attribute of the button clicked
             const moneyAmount = $(this).data('money');
-            console.log("buttAddFunds clicked: ", moneyAmount);
+            //Invoke setFunds functino with amount to be added
             machine.setFunds("+", moneyAmount);
-
         });
+
         //Script to listen for user input - option selection
         $(document).on('click', '.classOptionSelect', function (event) {
+            //Get the 'name' data attribute of the button clicked
             const itemCode = $(this).data('code');
             var itemId = "#" + itemCode;
+            //Use item code to look up item name
             var itemName = $(itemId).data('name');
-            console.log("buttOptionSelection item name: ", itemName);
             machine.purchaseItem(itemName);
         });
 
         //Script to listen for user input - withdraw funds
         $(document).on('click', '#buttWithdrawFunds', function (event) {
+            //Invoke withrdrawFunds method
             machine.withdrawFunds();
         });
 
         //Script to listen for operator input - add stock
         $(document).on('click', '#productAdd', function (event) {
+            //Get value of selected item in product dropdown
             var selectedProduct = document.getElementById('productSelected').value;
+            //Invoke manageStock function to increase selected stock by one
             machine.manageStock(selectedProduct, +1);
         });
 
         //Script to listen for operator input - remove stock
         $(document).on('click', '#productRemove', function (event) {
+            //Get value of selected item in product dropdown
             var selectedProduct = document.getElementById('productSelected').value;
+            //Invoke manageStock function to decrease selected stock by one
             machine.manageStock(selectedProduct, -1);
         });
 
-        
-
     })
-
 
 </script>
 
