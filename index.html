@@ -670,7 +670,7 @@
                 //Check if stock exists - maximum qty of 20 per item
                 if (newAmount > -1 && newAmount < 21) {
                     this.#setStockItemAmount(itemName,newAmount)
-                    var amountImpactMsg = amountImpact >0 ? "added one " : " - removed one ";
+                    var amountImpactMsg = amountImpact >0 ? "added one " : "removed one ";
                     this.#updateTransactionMsg("stockUpdateSuccess", amountImpactMsg + itemName);
                 } else{
                     var errorMoreInfo = parseInt(this.#items[itemName][0].amount) ==0 ? "zero " + itemName + " remain" : "maximum of 20 allowed";
