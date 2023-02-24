@@ -336,7 +336,7 @@
                     <div class="col-12">
                         <!-- Operator input - dropdown to select product from list -->
                         <select id="productSelected" class="form-select" aria-label="Default select example">
-                            <option selected>Product...</option>
+                            <option value="" selected>Product...</option>
                             <option value="Pepsi">Pepsi</option>
                             <option value="Fanta">Fanta</option>
                             <option value="Coke">Coke</option>
@@ -473,8 +473,9 @@
 
         //Function to add products to #items array
         addStock(...args) {
-            //stock is added into machine #items attribute
+            //Loop over each item passed into the addStock function
             args.forEach((arg) => {
+                //stock is added into machine #items attribute
                 this.#items[arg.name] = [arg];
             });
 
@@ -553,8 +554,9 @@
             //lookup currency conversion rate - static
             var conversionRateFromGbp = this.conversionRates[currency][0];
 
-            //Convert price of all items
+            //Loop through each item in #items array
             for (var item in this.#items) {
+                //Convert price of item
                 this.#items[item][0]['price'] = (this.#items[item][0]['price'] * conversionRateFromGbp).toFixed(2);
             }
 
@@ -563,7 +565,7 @@
         }
 
         //Function to update transaction message on screen
-        #updateTransactionMsg(CommsToUser) {
+        #updateTransactionMsg(CommsToUser, additionalComms) {
             var elMachineMsg = document.getElementById('transactionMsg');
             elMachineMsg.className = '';
             elMachineMsg.classList.add('alert');
@@ -588,11 +590,15 @@
                     elMachineMsg.classList.add('alert-danger');
                     break;
                 case "stockUpdateFail":
-                    this.#UserComms = "Transaction failed - invalid stock quantity";
+                    this.#UserComms = "Transaction failed - " + additionalComms;
+                    elMachineMsg.classList.add('alert-danger');
+                    break;
+                case "stockUpdateFailProduct":
+                    this.#UserComms = "Transaction failed - " + additionalComms;
                     elMachineMsg.classList.add('alert-danger');
                     break;
                 case "stockUpdateSuccess":
-                    this.#UserComms = "Transaction successful - stock updated";
+                    this.#UserComms = "Transaction successful - " + additionalComms;
                     elMachineMsg.classList.add('alert-success');
                     break;
                 case "purchaseSuccess":
@@ -657,13 +663,19 @@
 
         //Function to manage stock (used by operator)
         manageStock(itemName, amountImpact) {
-            var newAmount = parseInt(this.#items[itemName][0].amount)  + amountImpact;
-            //Check if stock exists - maximum qty of 20 per item
-            if (newAmount > -1 && newAmount < 21) {
-                this.#setStockItemAmount(itemName,newAmount)
-                this.#updateTransactionMsg("stockUpdateSuccess");
+            if(itemName == ""){
+                this.#updateTransactionMsg("stockUpdateFailProduct", "no product selected");
             } else{
-                this.#updateTransactionMsg("stockUpdateFail");
+                var newAmount = parseInt(this.#items[itemName][0].amount)  + amountImpact;
+                //Check if stock exists - maximum qty of 20 per item
+                if (newAmount > -1 && newAmount < 21) {
+                    this.#setStockItemAmount(itemName,newAmount)
+                    var amountImpactMsg = amountImpact >0 ? "added one " : " - removed one ";
+                    this.#updateTransactionMsg("stockUpdateSuccess", amountImpactMsg + itemName);
+                } else{
+                    var errorMoreInfo = parseInt(this.#items[itemName][0].amount) ==0 ? "zero " + itemName + " remain" : "maximum of 20 allowed";
+                    this.#updateTransactionMsg("stockUpdateFail", errorMoreInfo);
+                }
             }
         }
 
