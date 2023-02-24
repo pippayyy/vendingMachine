@@ -421,9 +421,10 @@
         }
 
         //Private function to add stock to vending machine (construct table)
-        #buildTable() {
+        #buildTable(logMessage) {
             //Create empty variable to store HTML
             var elementTabletHTML = "";
+            var consoleProdList = "";
             //Loop through each item in #items array
             for (var item in this.#items) {
 
@@ -431,6 +432,8 @@
                 var itemCode = this.#items[item][0]['code'];
                 var tableCell = document.getElementById(itemCode);
                 var tableCellId = "#" + itemCode;
+
+                consoleProdList += this.#items[item][0]['name'] + "(" + itemCode + ") \n";
 
                 //Check if product contains allergens
                 var allergensFlag = "";
@@ -469,6 +472,10 @@
                     '</div><span class="badge bg-primary rounded-pill">' + this.#items[item][0]['amount'] + '</span></div>';
             }
 
+            if(logMessage){
+                console.log("Please add funds and then select a product: \n " + consoleProdList);
+            }
+            
         }
 
         //Function to add products to #items array
@@ -480,7 +487,8 @@
             });
 
             //Invoke build table function once #items has been populated
-            this.#buildTable();
+            this.#buildTable(false);
+
             //Check expiry dates
             this.#checkExpiry();
         }
@@ -528,14 +536,33 @@
             //Update Items User Bought section
             var elItemsBought = document.getElementById('elItemsBought');
             var elementBoughtHTML = "";
+            //Count length of itemsBought object
+            var logItemsBought =  Object.keys(this.#itemsBought).length > 0 ? "" : "none";
+            //Create variable to count item in loop
+            var itemsBoughtIndex = 0;
+
             //Loop through all items in itemsBought
             for (var product in this.#itemsBought) {
                 var itemName = product;
                 var itemQuantity = this.#itemsBought[product];
 
+                //Increment itemsBoughtIndex variable
+                itemsBoughtIndex++;
+
                 elementBoughtHTML += '<li class="list-group-item d-flex justify-content-between align-items-center">' +
                     itemName + '<span class="badge bg-primary rounded-pill">' + itemQuantity + '</span></li>';
+
+                    logItemsBought += itemName + ": " + itemQuantity;
+
+                    //if item is not the last in the object - add new line
+                    if(Object.keys(this.#itemsBought).length !== itemsBoughtIndex){
+                        logItemsBought += " \n ";;
+                    }
+
             }
+
+            //Console log items user bought
+            console.log("Items bought: \n " + logItemsBought);
 
             //Update HTML
             elItemsBought.innerHTML = elementBoughtHTML;
@@ -544,7 +571,7 @@
             this.#checkExpiry();
 
             //Re-build table
-            this.#buildTable();
+            this.#buildTable(true);
         }
 
         //Function to convert currency
@@ -562,6 +589,9 @@
 
             //Update values on the screen for user
             this.#updateInterface();
+
+            //Update console
+            console.log("Chosen currency: " + this.#currency );
         }
 
         //Function to update transaction message on screen
@@ -617,6 +647,9 @@
                     this.#UserComms = "Awaiting action";
                     elMachineMsg.classList.add('alert-warning');
             }
+
+            //Console log message
+            console.log(this.#UserComms);
 
             //update message div based on state of transaction
             elMachineMsg.innerHTML = this.#UserComms;
@@ -683,7 +716,7 @@
         purchaseItem(itemName) {
             var price = this.#items[itemName][0].price;
             if (this.#items[itemName][0].amount > 0) {
-                if (price <= this.#money) {
+                if (parseInt(price) <= parseInt(this.#money)) {
                     //check if item has been bought previously - if yes, add 1 to qty
                     if (itemName in this.#itemsBought) {
                         this.#itemsBought[itemName] += 1;
@@ -783,6 +816,7 @@
     $(document).ready(function () {
         //Show welcome modal
         $("#modalPopUp").modal('show');
+        console.log("Welcome to Pip's Vending Machine! Please select a currency: GBP, USD, EUR");
 
         //Create new instance of the Machine class
         const machine = new Machine();
