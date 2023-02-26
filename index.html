@@ -716,7 +716,7 @@
         purchaseItem(itemName) {
             var price = this.#items[itemName][0].price;
             if (this.#items[itemName][0].amount > 0) {
-                if (parseInt(price) <= parseInt(this.#money)) {
+                if (parseFloat(price) <= parseFloat(this.#money)) {
                     //check if item has been bought previously - if yes, add 1 to qty
                     if (itemName in this.#itemsBought) {
                         this.#itemsBought[itemName] += 1;
